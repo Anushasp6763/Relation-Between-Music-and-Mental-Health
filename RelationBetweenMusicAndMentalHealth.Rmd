@@ -1,0 +1,210 @@
+---
+title: "Are Music And Mental Health Related?"
+author: "Anusha Paranjpe"
+date: "2024-07-08"
+output: pdf_document
+fontsize: 12pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+A Relation Between Music and Mental Health
+
+December 12, 2022
+
+Everyone loves music, the day is incomplete without playing at least one favorite song. But have you wondered why music is so intriguing? How it impacts and influences people that once a tune is loved, one is bound to listen to it several times? 
+
+Music is the "art of producing pleasing or expressive combinations of tones especially with melody, rhythm, and usually harmony"[1]. While the definition of music sounds cheerful, not many understand how it affects one's mind and emotions. 
+
+Music has a considerable impact on one's mental health. "A growing body of studies report associations between music engagement and general indices of mental health, including increased well-being or emotional competence, lending support for the possibility that music engagement may also be associated with better specific mental health outcomes. " [2] .
+
+Many people tend to listen to music as a part of relieving their anxiety and as an escape from reality. Anxiety is something that people face, some of them, on a daily basis. According to the Kaggle's database of collected information through survey on different genre of music and mental health, I can infer the following, creating my hypothesis based on Age and Anxiety. 
+
+```{r}
+data <- read.csv("mxmh_survey_results.csv")
+#View(data)
+
+data <- na.omit(data)
+data <- data[data$Anxiety != 7.5, ]
+data <- data[data$Depression != 3.5, ]
+#View(data)
+library(RColorBrewer)
+library(dplyr)
+```
+**My Hypothesis**:
+People of Age less than or equal to 25 are more susceptible to Anxiety than the people greater than age 25 
+
+**NULL Hypothesis:**
+The age does not define susceptibility to anxiety, it's the same for everyone. 
+
+```{r}
+Age.effect <- subset(data[, c("Anxiety","Age")])
+Age.effect <- na.omit(Age.effect)
+as.numeric(Age.effect$Hours.per.day)
+#View(Age.effect)
+LessthanorEqualto25.data <- subset(Age.effect, Age.effect$Age<=25)
+Morethan25.data <- subset(Age.effect, Age.effect$Age>25)
+
+mean.LessthanorEqualto25 <- mean(LessthanorEqualto25.data$Anxiety)
+mean.Morethan25 <- mean(Morethan25.data$Anxiety)
+
+sd.LessthanorEqualto25 <- sd(LessthanorEqualto25.data$Anxiety)
+sd.Morethan25 <- sd(Morethan25.data$Anxiety)
+
+num.LessthanorEqualto25<- length(LessthanorEqualto25.data$Anxiety)
+num.Morethan25 <- length(Morethan25.data$Anxiety)
+
+sd.LessthanorEqualto25.Morethan25 <- sqrt((sd.LessthanorEqualto25^2/num.LessthanorEqualto25) + (sd.Morethan25^2/num.Morethan25)) #using the formula to calculate the total standard deviation
+z.score <-((mean.LessthanorEqualto25 - mean.Morethan25)/(sd.LessthanorEqualto25.Morethan25)) #Using z-score formula
+p.value <- 1-pnorm(z.score) #finding the p-value using pnorm.
+p.value #Printing the P Value
+
+plot(x=seq(from = -22, to= 22, by=0.1),y=dnorm(seq(from = -22, to= 22,  by=0.1),mean=0),type='l',xlab = 'mean difference',  ylab='possibility') #Plotting the Z-score keeping normal distribution with mean=0 and sd=1
+abline(v=z.score, col='red') #plotting a straight line representing the Z Score calculated
+```
+Above is the graph where the red line seen is the Z-Score on a normal distribution with mean = 0 and sd=1. 
+
+P-value = 0.003469833, is less than 0.05 which proves that my hypothesis holds some significance. 
+
+Hence, young teens and early adults are prone to anxiety than the people of latter age. 
+
+\begingroup
+\Large But how is music related to this anxiety?
+\endgroup 
+
+
+To answer the above question, below is an analysis of the same dataset from Kaggle, surveyed from various individuals indicating, and connecting their mental health status to the kind of music they listen to. 
+
+Kaggle: [3] The dataset contains of 736 rows indicating the number of people and 33 columns with different variety of interests and some answered questions like level of anxiety, fav.genre, age and so on.
+
+\begingroup
+\Large Below are the popular genre most of the people listened to:
+\endgroup
+
+
+Plotting the dataset
+```{r}
+Anxiety_data <- subset(data[ , c("Fav.genre", "Anxiety")])
+colours = brewer.pal(8, "Accent") 
+barplot(table(Anxiety_data$Fav.genre), ylim =c(0,200), xlab = "Favourite Genre", ylab = "Number of People", main = "Favourite Genre of People", col = colours, width = 0.1)
+
+```
+
+As it can be seen that Rock Music was preferred the most out of all 16 different kinds of genre which included Classical, Country, EDM, Folk, Gospel, Hip Hop, Jazz, K pop, Latin, Lofi, Metal, Pop, R&B, Rap, Rock, and Video game music.
+Further, I created a table to view the level of anxiety in each of the genre where I found that Rock Music had most people with a tendency of anxiety:
+
+\begingroup
+\Large Table of Fav.genre and Anxiety
+\endgroup
+
+
+```{r}
+Anxiety_data <- Anxiety_data %>% 
+  rename(Favgenre = 'Fav.genre')
+table(Anxiety_data$Anxiety, Anxiety_data$Favgenre)
+```
+
+
+Taking the top 3 genre and checking the number of people and their level of Anxiety greater than or equal to 5: 
+
+Rock: 96 people
+
+Pop: 65 people
+
+Metal: 42 people
+
+Rock music is heavy on drums, guitars and vocals. Creating a loud form of music with constant play in the ears. This may act as one of the factors for anxiety. 
+
+Now, if we take Rock Music into further consideration and check the level of anxiety through a bar graph we can see as follows: 
+
+
+```{r}
+Rock_data <- subset(Anxiety_data, Favgenre =="Rock")
+barplot(table(Rock_data), ylim = c(0,35), xlab = "Anxiety level", ylab = "Number of People", main = "Rock Music: Number of people and thier Anxiety level", col = colours, beside = TRUE)
+```
+
+Most people who listen to Rock Music have a anxiety level of 8 and second highest being 7. This gives us some proof of the kind of impact Rock Music has on one's emotional health. 
+
+Through further analysis and taking some evidence into consideration, I can prove that  people have greater Anxiety given that they do not listen to Music of Foreign Languages:
+
+**Prior**: Participants have anxiety>=5
+
+P(Anxiety<5) = 31.6%
+
+P(Anxiety>=5) = 68.3%
+
+**Evidence**: Participants do not listen to music of Foreign Languages
+
+**Posterior**: People who do not listen to music of Foreign Languages are more likely to have Anxiety>=5
+
+P(Anxiety<5|DoesNotListenToForeignLanguages) = 0.3345588
+
+P(Anxiety>=5|DoesNotListenToForeignLanguages) =0.6654412
+
+**Support**:
+
+P(Anxiety<5|DoesNotListenToForeignLanguages) = 14.53%
+
+P(Anxiety>=5|DoesNotListenToForeignLanguages) = 28.91%
+
+**Explanation**: Through this we can see that participants who do not listen to music of Foreign Languages are seen to have Anxiety greater than or equal to 5. This tells us about the impact Foreign Languages have on one's mental health. This makes us think whether foreign languages can be a source to reduce mental disease symptoms? The answer to this can only be found through more data collection.
+
+```{r}
+PofA = nrow(data[data$Anxiety<5,])/nrow(data)#Getting the probability of Iphone 
+PofA
+PofA1 = nrow(data[data$Anxiety>=5,])/nrow(data)#Getting the probability of Android
+PofA1
+
+#Using Evidence: Probability that a participant has anxiety>5 given that the participant does not listen to music of Foreign Languages
+
+PofFL = nrow(data[(data$Foreign.languages=="No"),])/nrow(data) 
+PofFL
+
+P1 = nrow(data[(data$Anxiety<5)&(data$Foreign.languages=="No"),])/nrow(data[data$Anxiety<5,]) 
+P1
+
+P2 = nrow(data[(data$Anxiety>=5)&((data$Foreign.languages == "No")),])/nrow(data[data$Anxiety>=5,])
+P2
+
+#Posterior
+PF1 = (P1 * PofA)/PofFL
+PF1
+PF2 = (P2 * PofA1)/PofFL
+PF2
+
+#Support
+PS1 = (nrow(data[(data$Anxiety<5)&((data$Foreign.languages == "No")),])/nrow(data))*100
+PS1
+PS2 = (nrow(data[(data$Anxiety>=5)&((data$Foreign.languages == "No")),])/nrow(data))*100
+PS2
+```
+
+**Conclusion**:
+Music is best kind of indulgent, when it is herd in the form of art and appreciated and enjoyed for what it is. "Music engagement, a uniquely human trait which has a powerful impact on our everyday experience, is deeply tied with our social and cultural identities as well as our personality and cognition. The relevance of music engagement to mental health, and its potential use as a therapeutic tool, has been studied for decades, but this research had not yet cohered into a clear picture"[2]. Music is used in the form of Therapy for people and has found to reduce symptoms in some cases and improve health by some percentage. 
+Although music has some good effects and can be therapeutic, it can also have some negative effects. The kind of music one constantly listens to has a major impact on one's mental health. It is found by researchers that people who listen to Metal and Rock Music frequently have seen to have higher level of anger, depression and anxiety. 
+
+Therefore, Music is closely related to Mental Health and the neurons of our brains, as found in the Scholar Article [2].
+
+\begingroup
+\Large Drawback of using [2] the Study:
+\endgroup
+
+It explains the relation in theory and surveyed experiments but does not provide strong evidence on how mental health and music are interlinked.
+As it's title suggests, it does not explicitly show the data of different studies conducted by various institution as proof and further looks majorly upon evolving an in-depth studies of correlation of music and mental health in future. 
+The dataset from Kaggle [3] provides evidence on the relation between music and it's effects on a person. It only lacks a larger dataset and has only around 700 participants. The data can further be improved by taking survey of a greater audience. 
+
+References:
+
+[1] : https://www.merriam-webster.com/dictionary/music
+[2] : https://www.nature.com/articles/s41398-021-01483-8
+[3] : https://www.kaggle.com/datasets/catherinerasgaitis/mxmh-survey-results
+
+
+
+
+
+
+
+
+
